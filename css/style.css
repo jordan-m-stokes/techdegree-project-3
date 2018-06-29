@@ -144,13 +144,13 @@ button:hover {
 	display: none;
 }
 
-.error-message-container {
+.error-container {
     text-align: center;
     width: 100%;
     margin: 15px 0;
 }
 
-.error-message {
+.error-fieldset {
     color: red;
 }
 
