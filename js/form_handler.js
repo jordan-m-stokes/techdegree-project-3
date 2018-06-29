@@ -10,11 +10,8 @@ const select_payment = document.querySelector("#payment");
 
 const field_name = document.querySelector("#name");
 const field_mail = document.querySelector("#mail");
-const field_jobRole = document.createElement("input");
-    field_jobRole.type = "text";
-    field_jobRole.id = "other-title";
-    field_jobRole.placeholder = "Your Job Role";
-    select_jobRole.parentNode.appendChild(field_jobRole);
+//an alternative text field for when the user selects "other" as a job role
+const field_jobRole = document.querySelector("#other-title");
     field_jobRole.style.display = "none";
 const field_cardNumber = document.querySelector("#cc-num");
 const field_zip = document.querySelector("#zip");
@@ -26,7 +23,7 @@ const div_paymentOptions = document.querySelectorAll(".payment-option");
 const set_shirt = document.querySelector("#shirt");
 const set_activities = document.querySelector(".activities");
 
-let runningTotal = 0;
+//a running total for the amount the user owes
 const span_runningTotal = document.createElement("span");
     set_activities.appendChild(span_runningTotal);
 
@@ -146,15 +143,25 @@ returns - results - (object) an object which contains whether the email
         errorMessage: ""
     };
     //verifies email is properly formatted
-    if(email.includes("@"))
+    if(email.includes("@") && email.includes("."))
     {
-        const split = email.split("@");
+        let split = email.split("@");
 
         if(split.length === 2)
         {
             if(split[0].length > 0 && split[1].length > 0)
             {
-                return results;
+                split = split[1].split(".");
+
+                console.log(split.length);
+
+                if(split.length == 2)
+                {
+                    if(split[0].length > 0 && split[1].length > 0)
+                    {
+                        return results;
+                    }
+                }
             }
         }
     }
@@ -578,24 +585,23 @@ set_activities.addEventListener("change", event =>
     const targetIsChecked = target.checked;
     //the data to compare with all other checkboxes
     const targetData = constructActivityObject(target.value);
+    //determines if the selection of the "target" checkbox could create a conflict with events at the same time
+    const checkForConflict = target.type === "checkbox" && !(targetData.day === "N/A" || targetData.start === "N/A" || targetData.end === "N/A" || targetData === null)
 
-    //cleared in order to recalculate
-    runningTotal = 0;
+    //running total for the amount the user owes
+    let runningTotal = 0;
 
     //disables checkboxes that conflict with checkboxes already selected
-    if(target.type === "checkbox" && !(targetData.day === "N/A" || targetData.start === "N/A" || targetData.end === "N/A" || targetData === null))
+    for(let index = 0; index < activities.length; index++)
     {
-        for(let index = 0; index < activities.length; index++)
+        //the current checkbox in the loop
+        const comparison = activities[index];
+        const comparisonIsChecked = comparison.checked;
+        //the data for "comparison" to compare with "targetData"
+        const comparedData = constructActivityObject(comparison.value);
+
+        if(checkForConflict)
         {
-            //the current checkbox in the loop
-            const comparison = activities[index];
-            const comparisonIsChecked = comparison.checked;
-            //the data for "comparison" to compare with "targetData"
-            const comparedData = constructActivityObject(comparison.value);
-
-            //a running calculation of how much the user owes
-            runningTotal += (comparisonIsChecked) ? (comparedData.price) : 0;
-
             //ensures the comparison and the target aren't the same checkbox
             if(target.name !== comparison.name)
             {
@@ -613,6 +619,8 @@ set_activities.addEventListener("change", event =>
                 }
             }
         }
+        //a running calculation of how much the user owes
+        runningTotal += (comparisonIsChecked) ? (comparedData.price) : 0;
     }
     //updates page to display the amount the user owes
     span_runningTotal.textContent = (runningTotal > 0) ? ("Total: $" + runningTotal) : ("");
